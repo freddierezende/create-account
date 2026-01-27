@@ -1,7 +1,5 @@
 const { ApolloServer, gql } = require("apollo-server");
 
-// Definir schema (o que o sistema poderá fazer)
-
 const typeDefs = gql`
   type Account {
     id: ID!
@@ -10,21 +8,15 @@ const typeDefs = gql`
   }
 
   type Query {
-    #Listará todas as contas cadastradas
     getAccounts: [Account]
   }
 
   type Mutation {
-    #criará uma nova conta
     createAccount(name: String!, email: String!): Account
   }
 `;
 
-// banco de dados fake --- apenas para teste
-
 const accounts = [];
-
-// Resolvers (lógica das funções)
 
 const resolvers = {
   Query: {
@@ -38,8 +30,6 @@ const resolvers = {
     },
   },
 };
-
-// iniciando o servidor
 
 const server = new ApolloServer({ typeDefs, resolvers });
 
