@@ -22,3 +22,7 @@ Este projeto é um sistema completo de gerenciamento de usuários desenvolvido p
    npm install
    node index.js
    ```
+2. **Frontend**:
+   ```
+   npm start
+   ```
