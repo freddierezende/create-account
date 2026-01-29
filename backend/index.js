@@ -1,4 +1,6 @@
 const { ApolloServer, gql } = require("apollo-server");
+const sequelize = require("./models/index");
+const Account = require("./models/Account");
 
 const typeDefs = gql`
   type Account {
@@ -13,26 +15,39 @@ const typeDefs = gql`
 
   type Mutation {
     createAccount(name: String!, email: String!): Account
+    deleteAccount(id: ID!): Boolean
   }
 `;
 
-const accounts = [];
-
 const resolvers = {
   Query: {
-    getAccounts: () => accounts,
+    getAccounts: async () => await Account.findAll(),
   },
   Mutation: {
-    createAccount: (_, { name, email }) => {
-      const newAccount = { id: String(accounts.length + 1), name, email };
-      accounts.push(newAccount);
-      return newAccount;
+    createAccount: async (_, { name, email }) => {
+      return await Account.create({ name, email, password: "password123" });
+    },
+    deleteAccount: async (_, { id }) => {
+      try {
+        const deleted = await Account.destroy({
+          where: { id: Number(id) },
+        });
+        return deleted > 0;
+      } catch (error) {
+        return false;
+      }
     },
   },
 };
 
-const server = new ApolloServer({ typeDefs, resolvers });
+const server = new ApolloServer({
+  typeDefs,
+  resolvers,
+  cors: true,
+});
 
-server.listen().then(({ url }) => {
-  console.log(`🚀 Servidor rodando em ${url}`);
+sequelize.sync().then(() => {
+  server.listen().then(({ url }) => {
+    console.log(`🚀 Banco conectado e servidor rodando em ${url}`);
+  });
 });

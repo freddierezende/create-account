@@ -17,8 +17,14 @@ Este projeto é um sistema completo de gerenciamento de usuários desenvolvido p
 ## 📋 Como Rodar o Projeto
 
 1. **Backend**:
+
    ```bash
    cd backend
    npm install
    node index.js
+   ```
+
+2. **Frontend**:
+   ```
+   npm start
    ```

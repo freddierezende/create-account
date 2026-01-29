@@ -4,6 +4,8 @@ import { ApolloClient, InMemoryCache, gql } from "@apollo/client/core/index.js";
 import { HttpLink } from "@apollo/client/link/http/index.js";
 import { ApolloProvider } from "@apollo/client/react/index.js";
 import { useMutation, useQuery } from "@apollo/client/react/index.js";
+import Swal from "sweetalert2";
+import { Trash2 } from "lucide-react";
 
 const client = new ApolloClient({
   link: new HttpLink({ uri: "http://localhost:4000" }),
@@ -29,6 +31,12 @@ const CREATE_ACCOUNT = gql`
   }
 `;
 
+const DELETE_ACCOUNT = gql`
+  mutation DeleteAccount($id: ID!) {
+    deleteAccount(id: $id)
+  }
+`;
+
 function AppContents() {
   const [showModal, setShowModal] = useState(false);
   const [name, setName] = useState("");
@@ -37,17 +45,49 @@ function AppContents() {
   const { data, loading, refetch } = useQuery(GET_ACCOUNTS);
   const [createAccount, { loading: mLoading }] = useMutation(CREATE_ACCOUNT);
 
+  const [deleteAccount] = useMutation(DELETE_ACCOUNT);
+
   const handleSubmit = async () => {
-    if (!name || !email) return alert("Preencha tudo!");
+    if (!name || !email)
+      return Swal.fire("Ops!", "Preencha todos os campos.", "warning");
     try {
       await createAccount({ variables: { name, email } });
       setShowModal(false);
       setName("");
       setEmail("");
       refetch();
+      Swal.fire({
+        title: "Sucesso!",
+        text: "Usuário cadastrado!",
+        icon: "success",
+        confirmButtonColor: "#4f46e5",
+      });
     } catch (e) {
-      alert("Erro ao salvar.");
+      Swal.fire("Erro", "Não foi possível salvar o usuário.", "error");
     }
+  };
+
+  const handleDelete = (id) => {
+    Swal.fire({
+      title: "Tem certeza?",
+      text: "Isso removerá o usuário permanentemente!",
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonColor: "#ef4444",
+      cancelButtonColor: "#6b7280",
+      confirmButtonText: "Sim, excluir!",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await deleteAccount({ variables: { id } });
+          refetch();
+          Swal.fire("Deletado!", "O usuário foi removido.", "success");
+        } catch (error) {
+          Swal.fire("Erro!", "Não foi possível deletar.", "error");
+        }
+      }
+    });
   };
 
   return (
@@ -65,25 +105,38 @@ function AppContents() {
             <tr>
               <th>Nome</th>
               <th>E-mail</th>
+              <th style={{ textAlign: "center" }}>Ações</th>
             </tr>
           </thead>
           <tbody>
             {loading ? (
               <tr>
-                <td colSpan="2">Carregando...</td>
+                <td colSpan="3">Carregando...</td>
               </tr>
             ) : (
               data?.getAccounts.map((acc) => (
                 <tr key={acc.id}>
                   <td>{acc.name}</td>
                   <td>{acc.email}</td>
+                  <td style={{ textAlign: "center" }}>
+                    <button
+                      onClick={() => handleDelete(acc.id)}
+                      style={{
+                        background: "none",
+                        border: "none",
+                        color: "#ef4444",
+                        cursor: "pointer",
+                      }}
+                    >
+                      <Trash2 size={20} />
+                    </button>
+                  </td>
                 </tr>
               ))
             )}
           </tbody>
         </table>
       </div>
-
       {showModal && (
         <div className="modal-overlay">
           <div className="modal-content">
